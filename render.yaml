@@ -3,7 +3,7 @@
 # Render also creates the logs database declared at the end of this file.
 services:
   - type: web
-    name: daiist-group-project
+    name: retail-incident-triage
     runtime: python          # Python version from .python-version, packages from uv.lock
     plan: free
     region: frankfurt
@@ -20,13 +20,13 @@ services:
         sync: false
       - key: DATABASE_URL       # the logs database below; logbook.py writes to it
         fromDatabase:
-          name: daiist-group-project-logs
+          name: retail-incident-triage-logs
           property: connectionString
 
 # The logs database: free Postgres, 1 GB. Render deletes free databases 30 days after
 # they are created (plus 14 days of grace), so export the logs before then (SETUP.md, "Logs").
 databases:
-  - name: daiist-group-project-logs
+  - name: retail-incident-triage-logs
     plan: free
     region: frankfurt         # the same region as the app
     databaseName: logs

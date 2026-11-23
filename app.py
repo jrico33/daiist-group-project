@@ -20,8 +20,11 @@ import pipeline
 env.load_env()
 LOG_TARGET = logbook.start()
 
-TITLE = "Your product's name"  # TODO
-DESCRIPTION = "One sentence: who it is for and what it does."  # TODO
+TITLE = "Retail Incident Triage"  # provisional name
+DESCRIPTION = (
+    "For the operations team of a shopping centre: upload a photo of a problem and get its category, "
+    "severity and a drafted work order. Uncertain or serious cases are sent to a person."
+)
 
 
 def serve(raw_input: str) -> dict:
@@ -81,12 +84,11 @@ with gr.Blocks(title=TITLE) as demo:
 
     with gr.Tab("App"):
         request_id = gr.State("")
-        # TODO: your input. For images: gr.Image(type="filepath"); for files: gr.File(type="filepath").
-        raw_input = gr.Textbox(label="Customer message", lines=4)
+        raw_input = gr.Image(type="filepath", label="Photo of the problem (no people, please)")
         run_button = gr.Button("Run", variant="primary")
         with gr.Row():
-            out_a = gr.JSON(label="Component A")
-            out_b = gr.Textbox(label="Component B", lines=4)
+            out_a = gr.JSON(label="A. Vision: what is wrong?")
+            out_b = gr.Textbox(label="B. Agent: drafted work order", lines=8)
         status = gr.Markdown()
         with gr.Row():
             up = gr.Button("👍")
