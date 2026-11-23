@@ -1,0 +1,33 @@
+# Render reads this file when you create your service (see SETUP.md, "Put it online").
+# Change `name` before the first deploy: your app's address is https://<name>.onrender.com.
+# Render also creates the logs database declared at the end of this file.
+services:
+  - type: web
+    name: retail-incident-triage
+    runtime: python          # Python version from .python-version, packages from uv.lock
+    plan: free
+    region: frankfurt
+    buildCommand: uv sync --frozen --no-dev
+    startCommand: uv run --no-sync python app.py
+    healthCheckPath: /
+    autoDeployTrigger: commit   # every push to main redeploys
+    # Render asks for these values when you create the service; leave empty the ones you don't use.
+    # A key you add later goes in the service's Environment page on Render, not here.
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ROBOFLOW_API_KEY
+        sync: false
+      - key: DATABASE_URL       # the logs database below; logbook.py writes to it
+        fromDatabase:
+          name: retail-incident-triage-logs
+          property: connectionString
+
+# The logs database: free Postgres, 1 GB. Render deletes free databases 30 days after
+# they are created (plus 14 days of grace), so export the logs before then (SETUP.md, "Logs").
+databases:
+  - name: retail-incident-triage-logs
+    plan: free
+    region: frankfurt         # the same region as the app
+    databaseName: logs
+    user: app
