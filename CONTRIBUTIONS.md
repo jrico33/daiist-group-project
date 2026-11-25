@@ -8,7 +8,7 @@
 |---|---|---|
 | Juan Jacobo | jrico33 | Repo owner; project setup, business case, pipeline |
 | Rubén | rubensegu | Evaluation photos and case labels (c01–c14) |
-| | | |
+| Máximo | mgarridoIE | Evaluation photos and case labels (c15–c28) |
 | | | |
 | | | |
 | | | |
@@ -22,3 +22,4 @@
 | 2026-11-22 | Juan Jacobo | Forked the template; chose a provisional business case; first version of pipeline.py (vision + agent), app screen and config |
 | 2026-11-22 | Juan Jacobo | Took and prepared 12 photos (c29-c40), filled rows c29-c40 of eval/cases.csv and wrote the Data section of REPORT.md |
 | 2026-11-25 | Rubén | Took and prepared 14 evaluation photos (c01–c14) and added the expected categories and manual baseline decisions to `eval/cases.csv`. |
+| 2026-11-25 | Máximo | Uploaded 14 photos (4 normal, 10 hard), making sure no people or private information appeared, wrote the description of each photo and decided its expected category and baseline in eval/cases.csv, and listed their sources and licences in the Data section of REPORT.md |
