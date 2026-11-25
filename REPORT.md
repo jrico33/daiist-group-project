@@ -79,15 +79,66 @@ drafted work order  +  review rule (a person sees uncertain or serious cases)
 
 ### Components
 
-*Each component on its own: the metric, the result, the test data and its size.*
+Test data: the 40 cases of `eval/cases.csv` (18 normal, 10 hard, 6 review, 6 out of scope). They are also the end-to-end set: nothing was held out, and nothing was tuned on them. Default model: `gemini-3.5-flash-lite` (the 2.5 models are closed to new keys). All numbers come from `eval/eval_run_flash_lite.txt` (default) and `eval/eval_run_flash.txt` (`gemini-3.8-flash`).
+
+**Component A (vision), 40 cases.** Accuracy 62.5%, macro-F1 0.581. Severity within ±1: 100.0% of 2 cases. **Limitation: only 2 of 40 cases have an expected severity** (c38, c40), so this says nothing about severity in general, and the review rule and deadlines both depend on severity.
+
+**Component B (agent) alone, 40 cases.** B is fed the human-correct category, the expected severity (3 when there is none) and A's description. Tools used correctly 95.0%, reply consistent with the tools 95.0%, judge pass 92.5%. The judge fails are c12, c29 and c31; the tool and reply checks fail on c29 and c31. In these three cases A's description ("no visible damage") contradicts the correct category, so they partly reflect how the test is built: B followed the description in c29 and c31.
 
 ### End to end
 
-*How you wrote `eval/cases.csv` (counts by kind, two examples). Results against the baseline. Where the output is free text: the judge's rubric and your agreement with it on your own labels.*
+Two examples: c16 (normal), a stained ceiling tile, expected `water_leak`; c26 (hard), a hanging bulb in front of graffiti, expected `electrical`. Normal and hard cases are correct if the category matches (and the severity is within ±1 when given); review cases if a person sees them; out-of-scope cases if A answers `not_an_issue` or `other_or_unclear`, or a person sees them.
+
+| Kind | Cases | Product correct | Sent to review |
+|---|---|---|---|
+| normal | 18 | 66.7% | 11.1% |
+| hard | 10 | 60.0% | 0.0% |
+| review | 6 | 16.7% | 16.7% |
+| out_of_scope | 6 | 50.0% | 0.0% |
+| **All** | **40** | **55.0%** | **7.5%** |
+
+**The product is below the baseline: 55.0% against 90.0% correct, on the same 40 cases.** The baseline is what the case authors wrote that staff would do (36 "correct", 4 "wrong"), not measured staff performance, so 90.0% may flatter people. For c38 and c40 the expected label is a real category but the kind is out of scope: A gave the expected category and the case still counts as failed.
+
+**Review rule.** It sends 7.5% of cases to a person, about 3 a day at 40 reports a day: 1 of 6 review cases (17%) and 2 of 18 normal cases (11%). The confidence threshold of 0.7 never fired, because A's lowest confidence was 0.85: every case sent was for severity or category.
+
+**Judge.** Rubric: the work order matches A's result, takes team, mailbox and deadline from the tools, invents nothing, and is short and clear; it never sees the photo. The judge is `gemini-3.8-flash` for both runs, so it grades its own output in the 3.8 run. The intended check on that is agreement with human labels, but Gonzalo Angulo's 40 labels are for the flash-lite work orders, so the 3.8 judge result has no human check.
+
+Labelling rule: pass = the work order is consistent with A's output and actionable; fail = it contradicts itself or doesn't say what to do (c01, c13, c30). Claude proposed each label with a reason, without seeing the judge's verdicts, and Gonzalo Angulo confirmed all 40.
+
+The judge passed 100.0% of the work orders; the labels pass 37 of 40. **Agreement 92%, Cohen's kappa 0.00**: the judge agrees only because it passes everything, and it caught none of the 3 human fails. Its end-to-end pass rate is therefore not evidence of quality (it did fail 3 of B-alone's replies, so it can fail one).
+
+**Model comparison** (same 40 cases, prompts, rule and judge):
+
+| | gemini-3.5-flash-lite | gemini-3.8-flash |
+|---|---|---|
+| A accuracy / macro-F1 | 62.5% / 0.581 | 75.0% / 0.758 |
+| Product correct (baseline 90.0%) | 55.0% | 72.5% |
+| by kind: normal / hard / review / out of scope | 66.7 / 60.0 / 16.7 / 50.0% | 83.3 / 70.0 / 33.3 / 83.3% |
+| Sent to review | 7.5% | 15.0% |
+| Serious cases not sent to a person | 2 of 2 | 1 of 2 |
+| Judge pass, end to end (see kappa above) | 100.0% | 100.0% (grades itself) |
+| B alone: tools / reply / judge | 95.0 / 95.0 / 92.5% | 100.0 / 100.0 / 100.0% (grades itself) |
+| Mean cost per request | €0.00088 | €0.00382 |
+| Cost per month at 40/day | €1.06 | €4.58 |
+| Latency, median / worst | 4.2 s / 5.1 s | 15.0 s / 21.4 s |
+
+**Which to keep:** on these numbers `gemini-3.8-flash`, because it is right on 7 more cases (29 against 22) and loses none that flash-lite gets right, for €3.52 more a month and about 11 s more per request; neither beats the baseline. The default in `pipeline.py` is still flash-lite until the team decides.
 
 ### Cost and latency
 
-*Per request: tokens, euros and seconds, for each component and in total. What it would cost per month at the volume in your business case.*
+Per request, default model (40 cases):
+
+| | Tokens (mean) | Cost (mean) | Median | Worst case |
+|---|---|---|---|---|
+| A (vision) | 1,272 | €0.00046 | | |
+| B (agent) | 848 | €0.00042 | | |
+| Total | 2,120 | €0.00088 | €0.00098, 2,306 tokens, 4.2 s | €0.00104, 2,359 tokens, 5.1 s |
+
+Per month at 40 reports a day (30 days): **€1.06**. With `gemini-3.8-flash`: 2,902 tokens (A 1,510, B 1,391), €0.00382 (A €0.00184, B €0.00198), median €0.00410, 3,190 tokens and 15.0 s, worst €0.00592, 3,711 tokens and 21.4 s, €4.58 a month.
+
+Prices are Google's paid-tier prices on 25 Nov 2026, converted at the ECB rate of that day (1 EUR = 1.0935 USD; see `pipeline.py`); the 3.8 price is valid through 31 Dec 2026. With a free key the real cost is zero. Latency is measured for the whole chain, not per component, from one laptop. In the first 3.8 pass two cases ended in a read timeout (90 s limit) and succeeded on retry; the worst case above does not include them. The judge's calls (€0.1237 for the default run, €0.1176 for 3.8) are not part of the product's cost.
+
+**How to rerun:** `uv run python main.py evaluate` (for the other model, put `GEMINI_MODEL=gemini-3.8-flash` in front). With the cache in `logs/eval_cache.json`, only changed or new cases cost API calls. The cache is not in git, so the first run on another computer calls the API for everything.
 
 ## Operations
 
@@ -95,7 +146,45 @@ drafted work order  +  review rule (a person sees uncertain or serious cases)
 
 ## Failures
 
-*Failed end-to-end cases grouped by cause (which component, or the hand-off between them), with counts, and what you would fix first.*
+18 of 40 cases failed with the default model.
+
+1. **A: fire-safety problem missed with high confidence, 2 cases (c15, c19).** Both `fire_safety` cases were classified `not_an_issue`, with confidence 0.99 and 0.95 and severity 1, so no part of the review rule catches them and nobody sees them. These are the only two serious cases in the set.
+   - c15: an extinguisher on the floor under its sign; A described exactly that and saw no problem.
+   - c19: a small extinguisher in a wide entrance shot; A read it as well-kept equipment.
+2. **A: wrong category, 8 other cases.**
+   - Missed problem, closed as `not_an_issue`: c05 (bracket damage not seen), c06 (blocked sink read as a cloth soaking), c12 (leak not seen).
+   - Wrong incident type: c07 (spilled glass read as a leak), c13 (fallen flower read as broken structure), c22 (wet-floor cone read as a leak), c23 (vending machine read as structural damage), c25 (missing tiles seen, the burst pipe behind them not).
+3. **Review rule: not sent to a person, 5 cases.** c29 and c31 (nothing visible, closed as `not_an_issue` at 0.99 and 0.95), c30 (carpet thread, 0.85), c33 (items seen through a glass door, 0.85), c34 (rubbish bag with reflection, category right at 0.95). A's confidence is too high for a 0.7 threshold.
+4. **A: out-of-scope photo taken as an incident, 3 cases.** c37 (a shoe and a remote control read as waste); c38 and c40 (A gave the expected category, so these two are a conflict between the label and the kind).
+
+No case failed in the hand-off from A to B, and B's end-to-end tool use and replies passed the code checks in every case.
+
+**Weakness of component B** (found while labelling, not by the judge): when A's category doesn't match its own description (c13, c30), B writes a mismatched title and a non-actionable "appropriate action" instruction. c01 also never says what to clean.
+
+With `gemini-3.8-flash` 11 cases fail, all of them also failures of flash-lite: A wrong category c05, c06, c12, c19, c22, c25; not sent to a person c29, c31, c33, c34; out of scope c40. It catches c15 but not c19.
+
+**Fix first:** stop `not_an_issue` answers from closing a report unseen, since 7 of A's 15 wrong categories are `not_an_issue`.
+
+### Numbers for the Decision section (for Eduardo)
+
+Default `gemini-3.5-flash-lite`, with `gemini-3.8-flash` in brackets.
+
+- **Serious incidents missed (fire_safety or severity 4-5): 2 of 2 (1 of 2).** c15 and c19 were called `not_an_issue` at 0.95 or more, so the review rule doesn't catch them. Only two serious cases exist in the set, too few for a rate.
+- **Accuracy against the baseline:** product 55.0% (72.5%), baseline 90.0%. Component A 62.5% (75.0%).
+- **Sent to review:** 7.5%, about 3 a day at 40 reports a day (15.0%, about 6).
+- **Review threshold.** Options below; they are measured on the same 40 cases, so confirm a chosen one on new photos. "Wrong" is A's wrong category, all kinds.
+
+| Rule | Sent (per day) | Wrong caught | Review cases sent | Serious caught |
+|---|---|---|---|---|
+| Current, confidence < 0.7 | 7.5% (3) [15.0% (6)] | 0 of 15 [1 of 10] | 1 of 6 [2 of 6] | 0 of 2 [1 of 2] |
+| confidence < 0.9 | 17.5% (7) [45.0% (18)] | 3 of 15 [5 of 10] | 3 of 6 [3 of 6] | 0 of 2 [1 of 2] |
+| confidence < 0.95 | 22.5% (9) [50.0% (20)] | 4 of 15 [5 of 10] | 3 of 6 [3 of 6] | 0 of 2 [1 of 2] |
+| confidence < 0.99 | 82.5% (33) [95.0% (38)] | 12 of 15 [10 of 10] | 5 of 6 [6 of 6] | 1 of 2 [2 of 2] |
+| Current + every `not_an_issue` | 32.5% (13) [40.0% (16)] | 7 of 15 [7 of 10] | 3 of 6 [4 of 6] | 2 of 2 [2 of 2] |
+
+- **Cost and latency:** €0.00088 per request, €1.06 a month, median 4.2 s, worst 5.1 s (€0.00382, €4.58, 15.0 s, 21.4 s).
+- **Judge:** agreement 92% on 40 labels, kappa 0.00; it caught none of the 3 human fails, so don't use its pass rate as evidence.
+- **Model we recommend keeping:** `gemini-3.8-flash` on these numbers, with the `not_an_issue` review rule. If the team switches, change the default in `pipeline.py` and rerun the drift reference with it. No option shown beats the baseline on correct answers.
 
 ## Decision
 
@@ -116,3 +205,5 @@ Keys: `GEMINI_API_KEY` (required) and `GEMINI_MODEL` (optional). There is no dow
 Claude (Anthropic) was used on 22 Nov 2026 to propose the provisional business case and to write the first version of `pipeline.py`, the app screen and the configuration. The team reviews and owns all of it.
 
 On 25 Nov 2026 Claude searched Wikimedia Commons for candidate photos for cases c15 to c28, resized them, removed their metadata and helped word the `notes` and `baseline` texts. Máximo chose the 14 photos and decided the description, expected category and baseline of each one.
+
+On 25 Nov 2026 Claude Code ran the evaluation, updated the default model, prices and judge in `pipeline.py` and `evaluate.py`, proposed the human labels that Gonzalo Angulo confirmed (see End to end), and drafted the Evaluation and Failures sections from the runs' numbers.
