@@ -14,11 +14,17 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent
 REFERENCE_FILE = ROOT / "monitoring" / "reference_features.csv"
 
+# The drift check watches the light and content of the photo, not its file format:
+# megapixels and aspect_ratio depend on how the photo was taken or exported, and our
+# own normal cases already range from 0.26 to 3.1 MP with no change in quality, so
+# they would raise false alarms. They are still logged, just not alerted on.
+DRIFT_FEATURES = ("brightness", "contrast")
 PSI_BINS = 5           # quantile bins of the reference; few, because samples are small
-PSI_ALERT = 0.25       # PLACEHOLDER: alert when a feature's PSI exceeds this...
+PSI_ALERT = 1.25       # alert when a feature's PSI exceeds this... (justified in REPORT.md, Operations)
 NOISE_MULTIPLE = 2     # ...and this many times the PSI expected by chance (psi_noise)
 WINDOW = 100           # the drift check looks at the last WINDOW requests...
-MIN_WINDOW = 20        # ...and stays silent with fewer than this
+MIN_WINDOW = 20        # ...and the 👎 alert stays silent with fewer than this
+DRIFT_MIN_WINDOW = 100  # the drift alert waits for a full window: with 20-50 requests it is mostly noise
 THUMBS_DOWN_ALERT = 0.4  # PLACEHOLDER: alert when this share of rated requests is 👎
 
 
@@ -79,7 +85,7 @@ def drift(reference: pd.DataFrame, current: pd.DataFrame) -> pd.DataFrame:
     """
     rows = []
     for feature in reference.columns:
-        if feature in current.columns:
+        if feature in current.columns and feature in DRIFT_FEATURES:
             value = psi(reference[feature], current[feature])
             noise = psi_noise(reference[feature].notna().sum(), max(current[feature].notna().sum(), 1))
             threshold = max(PSI_ALERT, NOISE_MULTIPLE * noise)
@@ -129,7 +135,7 @@ def alerts(logs: pd.DataFrame, reference: pd.DataFrame | None) -> list[str]:
     """The alert rules. Each fired alert is one message."""
     fired = []
     window = logs.tail(WINDOW)
-    if reference is not None and len(window) >= MIN_WINDOW:
+    if reference is not None and len(window) >= DRIFT_MIN_WINDOW:
         report = drift(reference, live_features(window))
         for row in report[report["alert"]].itertuples():
             fired.append(f"Drift in `{row.feature}`: PSI {row.psi} > {row.threshold} over the last {len(window)} requests.")
