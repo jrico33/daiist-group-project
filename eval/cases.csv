@@ -13,20 +13,20 @@ c11,eval/inputs/c11.jpg.jpeg,normal,broken_glass_or_structure,correct: staff wou
 c12,eval/inputs/c12.jpg.jpeg,normal,water_leak,correct: staff would send the report to plumbing,Reported water leaks at the plumbing connections
 c13,eval/inputs/c13.jpg.jpeg,normal,cleanliness_or_waste,correct: staff would ask the cleaning team to remove the debris,Flower pulled from a decorative arrangement and left on the floor
 c14,eval/inputs/c14.jpg.jpeg,normal,broken_glass_or_structure,correct: staff would request repair of the wall finish,Visible damage to the wall finish beside the frame
-c15,,normal,,,
-c16,,normal,,,
-c17,,normal,,,
-c18,,normal,,,
-c19,,hard,,,
-c20,,hard,,,
-c21,,hard,,,
-c22,,hard,,,
-c23,,hard,,,
-c24,,hard,,,
-c25,,hard,,,
-c26,,hard,,,
-c27,,hard,,,
-c28,,hard,,,
+c15,eval/inputs/c15.jpg,normal,fire_safety,correct: staff would ask maintenance to mount the extinguisher back on the wall,Extinguisher standing on the floor below its sign instead of mounted
+c16,eval/inputs/c16.jpg,normal,water_leak,correct: staff would send the report to plumbing to find the leak above the ceiling,Brown water stain on a suspended ceiling tile
+c17,eval/inputs/c17.jpg,normal,broken_glass_or_structure,correct: staff would request replacement of the glass block,Hole smashed in a glass block wall
+c18,eval/inputs/c18.jpg,normal,signage_or_graffiti,correct: staff would request graffiti removal from the shutter,Graffiti tags covering a metal roller shutter
+c19,eval/inputs/c19.jpg,hard,fire_safety,correct: staff would ask maintenance to mount the extinguisher on the wall,"Wide shot of a building entrance: the extinguisher stands on the floor instead of being mounted, and it is small in the frame"
+c20,eval/inputs/c20.jpg,hard,signage_or_graffiti,correct: staff would request removal of the stickers,"Sign covered with stickers, photographed at night from below"
+c21,eval/inputs/c21.jpg,hard,cleanliness_or_waste,correct: staff would send it to the cleaning team,"A single cigarette butt on the floor: very small object, low severity"
+c22,eval/inputs/c22.jpg,hard,cleanliness_or_waste,wrong: staff might send a second cleaner although the wet floor is already signposted,"Wet floor cone already in place: the hazard is being handled, low severity"
+c23,eval/inputs/c23.jpg,hard,other_or_unclear,correct: staff would call the company responsible for the vending machine,"Vending machine with an out of order note: no category fits, the supplier must fix it"
+c24,eval/inputs/c24.jpg,hard,cleanliness_or_waste,correct: staff would send it to the cleaning team,"Food wrapper among dry leaves: litter in an outdoor area, hard to spot"
+c25,eval/inputs/c25.jpg,hard,water_leak,"wrong: staff might send it to building maintenance as broken tiles, while the cause is a burst pipe",Tiles removed under a sink exposing the pipe; the source photo documents a burst pipe
+c26,eval/inputs/c26.jpg,hard,electrical,correct: staff would send it to electrical maintenance,"Bulb hanging loose from its holder with graffiti behind: two categories in one photo, the electrical hazard comes first"
+c27,eval/inputs/c27.jpg,hard,broken_glass_or_structure,wrong: staff might miss the thin crack and close the report,Thin crack across a decorative mirror
+c28,eval/inputs/c28.jpg,hard,water_leak,"wrong: staff might send it to painting as peeling paint, without checking for a leak","Peeling ceiling paint with brown stains: likely water damage, could be read as wear"
 c29,eval/inputs/c29.jpeg,review,other_or_unclear,correct: a person looks at every report today,
 c30,eval/inputs/c30.jpeg,review,other_or_unclear,correct: a person looks at every report today,
 c31,eval/inputs/c31.jpeg,review,other_or_unclear,correct: a person looks at every report today,
