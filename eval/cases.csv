@@ -1,18 +1,18 @@
 id,input,kind,expected,baseline,notes
-c01,eval/inputs/c01.jpg,normal,cleanliness_or_waste,correct: staff would send the report to the cleaning team,Open bag of rubbish on the floor
-c02,eval/inputs/c02.jpg,normal,water_leak,correct: staff would send the report to plumbing,Water keeps running from the tap while it is turned off
-c03,eval/inputs/c03.jpg,normal,electrical,correct: staff would send the report to electrical maintenance,Wires protrude from an uncovered electrical box
-c04,eval/inputs/c04.jpg,normal,signage_or_graffiti,correct: staff would request graffiti removal,Black graffiti marks on the surface
-c05,eval/inputs/c05.jpg,normal,broken_glass_or_structure,correct: staff would request a maintenance inspection,One of the towel rail brackets appears damaged
-c06,eval/inputs/c06.jpg,normal,other_or_unclear,correct: staff would send the blockage report to plumbing,Standing water in a blocked sink with a cloth inside
-c07,eval/inputs/c07.jpg,normal,cleanliness_or_waste,correct: staff would send the report to the cleaning team,Water spilled from an overturned glass
-c08,eval/inputs/c08.jpg,normal,electrical,correct: staff would ask electrical maintenance to inspect the connector,The faulty power connector does not fit into its socket
-c09,eval/inputs/c09.jpg,normal,broken_glass_or_structure,correct: staff would request a maintenance inspection,Chipped corner of a mirror
+c01,eval/inputs/c01.jpg.jpeg,normal,cleanliness_or_waste,correct: staff would send the report to the cleaning team,Open bag of rubbish on the floor
+c02,eval/inputs/c02.jpg.jpeg,normal,water_leak,correct: staff would send the report to plumbing,Water keeps running from the tap while it is turned off
+c03,eval/inputs/c03.jpg.jpeg,normal,electrical,correct: staff would send the report to electrical maintenance,Wires protrude from an uncovered electrical box
+c04,eval/inputs/c04.jpg.jpeg,normal,signage_or_graffiti,correct: staff would request graffiti removal,Black graffiti marks on the surface
+c05,eval/inputs/c05.jpg.jpeg,normal,broken_glass_or_structure,correct: staff would request a maintenance inspection,One of the towel rail brackets appears damaged
+c06,eval/inputs/c06.jpg.jpeg,normal,other_or_unclear,correct: staff would send the blockage report to plumbing,Standing water in a blocked sink with a cloth inside
+c07,eval/inputs/c07.jpg.jpeg,normal,cleanliness_or_waste,correct: staff would send the report to the cleaning team,Water spilled from an overturned glass
+c08,eval/inputs/c08.jpg.jpeg,normal,electrical,correct: staff would ask electrical maintenance to inspect the connector,The faulty power connector does not fit into its socket
+c09,eval/inputs/c09.jpg.jpeg,normal,broken_glass_or_structure,correct: staff would request a maintenance inspection,Chipped corner of a mirror
 c10,eval/inputs/c10.jpg,normal,cleanliness_or_waste,correct: staff would request removal of the discarded materials,Cardboard boxes and packaging awaiting removal
-c11,eval/inputs/c11.jpg,normal,broken_glass_or_structure,correct: staff would request repair of the enclosure,Damaged enclosure with exposed brickwork and pipes
-c12,eval/inputs/c12.jpg,normal,water_leak,correct: staff would send the report to plumbing,Reported water leaks at the plumbing connections
-c13,eval/inputs/c13.jpg,normal,cleanliness_or_waste,correct: staff would ask the cleaning team to remove the debris,Flower pulled from a decorative arrangement and left on the floor
-c14,eval/inputs/c14.jpg,normal,broken_glass_or_structure,correct: staff would request repair of the wall finish,Visible damage to the wall finish beside the frame
+c11,eval/inputs/c11.jpg.jpeg,normal,broken_glass_or_structure,correct: staff would request repair of the enclosure,Damaged enclosure with exposed brickwork and pipes
+c12,eval/inputs/c12.jpg.jpeg,normal,water_leak,correct: staff would send the report to plumbing,Reported water leaks at the plumbing connections
+c13,eval/inputs/c13.jpg.jpeg,normal,cleanliness_or_waste,correct: staff would ask the cleaning team to remove the debris,Flower pulled from a decorative arrangement and left on the floor
+c14,eval/inputs/c14.jpg.jpeg,normal,broken_glass_or_structure,correct: staff would request repair of the wall finish,Visible damage to the wall finish beside the frame
 c15,,normal,,,
 c16,,normal,,,
 c17,,normal,,,
