@@ -10,7 +10,7 @@ The brief expects more from larger teams, so with 6 members aim for 40 cases ins
 
 | # | Workstream | Who | Compute |
 |---|---|---|---|
-| 1 | **Lead and delivery**: confirm the use case, add collaborators, assemble `REPORT.md`, deploy on Render, run `check.py`, tag `final`, presentation. Optional: the bandit bonus. | | Light. Render free plan (512 MB). `check.py` repeats the drift demo, about 120 API calls. |
+| 1 | **Lead and delivery**: confirm the use case, add collaborators, assemble `REPORT.md`, deploy on Render, run `check.py`, tag `final`, presentation. Optional: the bandit bonus. | Eduardo Alfaro | Light. Render free plan (512 MB). `check.py` repeats the drift demo, about 120 API calls. |
 | 2 | **Cases, part 1**: photos and rows c01 to c14 of `eval/cases.csv` (all `normal`), with `expected` and `baseline`. | Rubén Segura | Light. Manual work, a few hours. |
 | 3 | **Cases, part 2**: rows c15 to c28 (c15 to c18 `normal`, c19 to c28 `hard`), with `expected` and `baseline`. | Máximo | Light. Manual work, a few hours. |
 | 4 | **Cases, part 3**: rows c29 to c40 (`review` and `out_of_scope`), the `baseline` notes, and the Data section of `REPORT.md` (sources, licences). | Juan Jacobo | Light. About 12 photos, 30 to 45 minutes, no API key needed. |
