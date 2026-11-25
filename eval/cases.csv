@@ -1,5 +1,5 @@
 id,input,kind,expected,baseline,notes
-c01,,normal,,,
+c01,eval/inputs/c01.jpg,normal,cleanliness_or_waste,correct: staff would send the report to the cleaning team,Open bag of rubbish on the floor
 c02,,normal,,,
 c03,,normal,,,
 c04,,normal,,,
