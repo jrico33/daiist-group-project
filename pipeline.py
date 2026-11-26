@@ -17,6 +17,7 @@ import base64
 import json
 import mimetypes
 import os
+import re
 import time
 import urllib.error
 import urllib.request
@@ -91,16 +92,28 @@ def _gemini(body: dict, model: str = MODEL) -> dict:
         data=json.dumps(body).encode("utf-8"),
         headers={"Content-Type": "application/json", "x-goog-api-key": key},
     )
-    for attempt in range(4):
+    attempts = 6
+    for attempt in range(attempts):
         try:
             with urllib.request.urlopen(request, timeout=90) as response:
                 return json.load(response)
         except urllib.error.HTTPError as error:
-            if error.code in (429, 500, 503) and attempt < 3:
-                time.sleep(2 * (attempt + 1))
+            text = error.read().decode("utf-8", "replace")
+            if error.code in (429, 500, 503) and attempt < attempts - 1:
+                time.sleep(_retry_delay(error.code, text, attempt))
                 continue
-            raise RuntimeError(f"Gemini API error {error.code}: {error.read().decode('utf-8', 'replace')[:300]}") from error
+            raise RuntimeError(f"Gemini API error {error.code}: {text[:300]}") from error
     raise RuntimeError("Gemini API did not answer.")
+
+
+def _retry_delay(code: int, text: str, attempt: int) -> float:
+    """Seconds to wait before retrying. The free tier limits requests per minute: on a 429,
+    wait as long as Google asks (its `retryDelay`), or up to a minute, so a burst of requests
+    (the drift demo, the evaluation) slows down instead of failing."""
+    if code == 429:
+        match = re.search(r'"retryDelay":\s*"(\d+(?:\.\d+)?)s"', text)
+        return min(float(match.group(1)) + 1, 65) if match else min(15 * (attempt + 1), 60)
+    return 2 * (attempt + 1)
 
 
 def _usage(response: dict) -> tuple[int, int]:
