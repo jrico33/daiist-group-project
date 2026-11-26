@@ -1,7 +1,7 @@
 # Group Assignment Report
 
-- **Team** (Blackboard group name):
-- **Section**: [BBADBA 5A | BBADBA 5B | PPLEDBA 5A]
+- **Team** (Blackboard group name): Group 6
+- **Section**: BBADBA 5B
 - **App URL** (on Render):
 - **Final commit** (tag `final`):
 
