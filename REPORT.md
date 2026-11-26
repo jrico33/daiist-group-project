@@ -2,7 +2,7 @@
 
 - **Team** (Blackboard group name): Group 6
 - **Section**: BBADBA 5B
-- **App URL** (on Render):
+- **App URL** (on Render): https://retail-incident-triage.onrender.com
 - **Final commit** (tag `final`):
 
 *At most about 3,000 words, tables excluded. Members and who did what go in CONTRIBUTIONS.md.*
