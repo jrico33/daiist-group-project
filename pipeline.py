@@ -45,10 +45,12 @@ PRICES_EUR_PER_M = {  # model: (input, output)
 # A model that is not in the table is priced as the most expensive one, so its cost is not understated.
 FALLBACK_PRICE = max(PRICES_EUR_PER_M.values())
 
-# Review rule (to justify in REPORT.md with the evaluation numbers).
+# Review rule (justified in REPORT.md, Decision, with the evaluation numbers).
 REVIEW_BELOW_CONFIDENCE = 0.7
 REVIEW_FROM_SEVERITY = 4
-ALWAYS_REVIEW = {"fire_safety", "other_or_unclear"}
+# not_an_issue is reviewed too: in the evaluation, 7 of A's 15 wrong categories were not_an_issue,
+# including both serious fire-safety cases (c15, c19), all at confidence 0.85 or more.
+ALWAYS_REVIEW = {"fire_safety", "other_or_unclear", "not_an_issue"}
 
 CATEGORIES = [
     "water_leak",

@@ -11,7 +11,7 @@
 | Máximo | mgarridoIE | Evaluation photos and case labels (c15–c28) |
 | Gonzalo Angulo | gonzaloanguloo | Evaluation (workstream 6): runs, model comparison, human labels, Evaluation/Cost/Failures sections |
 | Gonzalo Mir | gonzalomirr | Reference and drift (workstream 5): reference and shifted photos, drift threshold, Operations section |
-| | | |
+| Eduardo | ealfaro22 | Lead and delivery (workstream 1): merging the workstreams, review rule, business case, Decision, deploy, final check |
 
 ## Log
 
@@ -28,3 +28,5 @@
 | 2026-11-25 | Gonzalo Angulo | Labelled the 40 work orders in eval/human_labels.csv (labels proposed by Claude, confirmed in batches) and computed the judge's agreement |
 | 2026-11-25 | Gonzalo Angulo | Wrote the Evaluation, Cost and latency, and Failures sections of REPORT.md, with the numbers for the Decision section |
 | 2026-11-25 | Gonzalo Mir | Took 30 reference photos (r01-r30) and chose 10 shifted photos from Wikimedia Commons (s01-s10), ran `main.py reference` and `main.py drift-demo`, set the drift features and alert threshold in monitor.py from a simulation, and wrote the Operations section and the shifted set's sources in REPORT.md |
+| 2026-11-26 | Eduardo | Merged workstreams 5 and 6 into main; completed the Data section (photos c01-c14, reference set) and logged workstream 5 |
+| 2026-11-26 | Eduardo | Kept gemini-3.5-flash-lite as the product's model, added not_an_issue to the review rule in pipeline.py, rewrote the business case with the evaluation numbers and wrote the Decision and How to run sections of REPORT.md |

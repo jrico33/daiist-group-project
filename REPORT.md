@@ -9,17 +9,21 @@
 
 ## Business case
 
-*Provisional draft (22 Nov 2026): the team must confirm or change it, and replace every assumption marked [A] with real figures.*
-
 **Users.** The operations team of a shopping centre (property or centre manager and technical-services coordinator). Tenants, security staff and visitors send photos of problems: leaks, broken glass, electrical faults, waste, graffiti, fire-safety issues.
 
 **Decision.** For each incident photo: what is wrong, how urgent it is, which team must act, and by when. A work order is drafted automatically. Uncertain or serious cases go to a person before anything is sent.
 
-**Baseline (today).** A person opens each report, looks at the photo, classifies it and forwards it by email to the right team. [A] About 4 minutes per report, and about 10% of reports are routed to the wrong team or given the wrong priority.
+**Baseline (today).** A person opens each report, looks at the photo, classifies it and forwards it by email to the right team. We estimate about 4 minutes per report: opening the message, looking at the photo, finding the team and its mailbox, and writing the email. On our 40 evaluation cases, the case authors judged that staff would decide correctly in 36 (90%) and wrongly in 4 (10%), mostly hidden causes such as a leak behind tiles or peeling paint. That 90% is the baseline the product has to beat. These figures are our estimates, not measurements from a real centre.
 
 **Success metric.** (1) Share of reports with the correct category and team against a person's labels in `eval/cases.csv`, compared with the baseline; (2) share of serious incidents (severity 4-5) that are never missed or delayed; (3) minutes of staff time per report.
 
-**Value in euros.** [A] A medium centre receives about 40 reports a day, about 14,600 a year. If the product handles 70% automatically, with 1 minute of review instead of 4 minutes of manual work, it saves about 2.1 minutes per report on average, which is about 510 staff hours a year. At a loaded cost of 30 EUR per hour that is about 15,000 EUR a year per centre, before API costs (to be measured in the Evaluation section).
+**Value in euros.** We assume a medium centre receives about 40 reports a day, about 14,600 a year, and that a person costs about 30 EUR an hour with social charges.
+
+- *What we hoped before measuring:* the product handles 70% of reports alone, with 1 minute of review instead of 4 minutes of manual work. That saves about 2.1 minutes per report, about 510 hours or **15,000 EUR a year**.
+- *What the evaluation supports:* the product alone is right in 55% of cases, against 90% for a person, so it cannot close reports alone (see Decision). Used as an assistant, it pre-fills every work order and a person confirms or corrects it. Confirming a right draft takes about 1 minute; a wrong one takes about the same 4 minutes as today. The average is 0.55 × 1 + 0.45 × 4 = 2.35 minutes, a saving of 1.65 minutes per report. That is about 400 hours, or **about 12,000 EUR a year per centre**.
+- *Cost:* zero with a free-tier key. At paid-tier prices it is €0.00088 per report, about €13 a year (Cost and latency), so the cost does not change the case.
+
+The 1 and 4 minutes are our estimates. A pilot should time them.
 
 ## Architecture
 
@@ -36,11 +40,11 @@ photo (JPG or PNG)
 drafted work order  +  review rule (a person sees uncertain or serious cases)
 ```
 
-**One request.** The user uploads a photo in the App tab. The pipeline computes simple image features (brightness, contrast, size) for the drift check, then sends the photo to component A, which returns a category, a severity, a confidence and a description as structured JSON. Component B receives only that output, not the photo: it calls `lookup_sla` for the responsible team and the deadline, then `lookup_contact` for the team mailbox, and writes a short work order. The review rule sends the case to a person if the confidence is below 0.7, the severity is 4 or more, the category is fire safety or unclear, or B made no tool calls. The input summary, features, both outputs, versions, latency, tokens, cost and the user's thumbs up or down are logged.
+**One request.** The user uploads a photo in the App tab. The pipeline computes simple image features (brightness, contrast, size) for the drift check, then sends the photo to component A, which returns a category, a severity, a confidence and a description as structured JSON. Component B receives only that output, not the photo: it calls `lookup_sla` for the responsible team and the deadline, then `lookup_contact` for the team mailbox, and writes a short work order. The review rule sends the case to a person if the confidence is below 0.7, the severity is 4 or more, the category is fire safety, unclear or `not_an_issue`, or B made no tool calls (`not_an_issue` was added after the evaluation; see Decision). The input summary, features, both outputs, versions, latency, tokens, cost and the user's thumbs up or down are logged.
 
-**Models and why.** Both components use Gemini through its REST API (the model name is in `pipeline.py` and can be changed with `GEMINI_MODEL`). The course allows a free Gemini key, one API offers vision and function calling, and nothing heavy has to run on Render's 512 MB free service. The tools are plain Python functions over fictional teams, deadlines and mailboxes [A: replace them with the real policy of the centre].
+**Models and why.** Both components use Gemini through its REST API (the model name is in `pipeline.py` and can be changed with `GEMINI_MODEL`). The course allows a free Gemini key, one API offers vision and function calling, and nothing heavy has to run on Render's 512 MB free service. The tools are plain Python functions over the teams, response deadlines and mailboxes of a typical centre. They are our assumptions, not the policy of a real centre, which would replace them in a pilot.
 
-**Reused from assignments 1-3.** Nothing so far. [TODO: the team states any reused code, whose it was and where it is.]
+**Reused from assignments 1-3.** None. All the code was written for this project, starting from the course template.
 
 ## Data
 
@@ -143,7 +147,7 @@ The judge passed 100.0% of the work orders; the labels pass 37 of 40. **Agreemen
 | Cost per month at 40/day | €1.06 | €4.58 |
 | Latency, median / worst | 4.2 s / 5.1 s | 15.0 s / 21.4 s |
 
-**Which to keep:** on these numbers `gemini-3.8-flash`, because it is right on 7 more cases (29 against 22) and loses none that flash-lite gets right, for €3.52 more a month and about 11 s more per request; neither beats the baseline. The default in `pipeline.py` is still flash-lite until the team decides.
+**Which to keep:** on these numbers `gemini-3.8-flash`, because it is right on 7 more cases (29 against 22) and loses none that flash-lite gets right, for €3.52 more a month and about 11 s more per request; neither beats the baseline. **The team kept `gemini-3.5-flash-lite`** as the product's model: neither model beats the baseline, so in both cases a person stays in the loop (see Decision), and there the gain from 3.8 is smaller than its cost in waiting time (15 s against 4 s per photo). Both models are free with a free-tier key. The drift check does not depend on the model, because it only watches the brightness and contrast of the photos.
 
 ### Cost and latency
 
@@ -242,15 +246,34 @@ Default `gemini-3.5-flash-lite`, with `gemini-3.8-flash` in brackets.
 
 ## Decision
 
-*Which cases go to a person: the rule, and how many cases a day that would be. Go / no-go / go with conditions: the conditions, and the evidence behind them.*
+**Go with conditions: as an assistant to a person, not as an automatic system.**
 
-## Bonus: reinforcement learning
+**Why not go.** The product alone is right in 55.0% of the 40 cases, against 90.0% for a person today. It also missed both serious cases (c15 and c19, an extinguisher left on the floor): it called them `not_an_issue` with confidence 0.95 or more, so the original review rule let them through unseen. Switching to `gemini-3.8-flash` raises accuracy to 72.5% but still stays below the baseline and still misses c19. On these numbers no version of the product should close a report without a person.
 
-*Delete this section if you did not do it. The loop (feedback → reward → update → behaviour), the reward and what it could reward by accident, the exploration strategy and its cost, the evidence from real logs (and which part was simulated), the risks.*
+**Why not no-go.** The chain itself works: no case failed in the hand-off from A to B, and B used its tools correctly in 95% of the cases where it was tested alone. The drift alert stays quiet on normal photos and fires on shifted ones. Even as an assistant it saves about 1.65 minutes per report, about 12,000 EUR a year per centre (Business case), at no API cost on the free tier.
+
+**Which cases go to a person.** In the pilot, a person confirms every work order before it is sent. The review rule decides which ones are marked to be **checked first and carefully**: confidence below 0.7, severity 4 or more, fire safety, unclear, `not_an_issue`, or no tool calls. We added `not_an_issue` after the evaluation (`pipeline.ALWAYS_REVIEW`), because 7 of A's 15 wrong categories were `not_an_issue`, including both serious cases. On the 40 cases, with `gemini-3.5-flash-lite`:
+
+| Rule | Marked for review | Per day (40 reports) | A's wrong categories caught | Serious cases caught |
+|---|---|---|---|---|
+| Before (evaluated) | 7.5% | 3 | 0 of 15 | 0 of 2 |
+| **Now: before + every `not_an_issue`** | **32.5%** | **13** | **7 of 15** | **2 of 2** |
+
+The other tables in Evaluation were measured with the rule before this change. The row "Now" comes from the review-rule variants that `evaluate.py` computes on the same run.
+
+**Conditions to let the product send reports alone** (the unmarked ones), all measured on new photos and not on these 40:
+
+1. At least 100 new real photos from the centre, including at least 10 serious cases. Today only 2 serious cases exist, too few to estimate a rate.
+2. On unmarked cases, the product is right at least as often as a person (90%), and no serious case is left unmarked.
+3. A judge that disagrees with people when they fail (kappa clearly above 0). Today kappa is 0.00, so the judge's pass rate is not evidence of quality.
+4. The real teams, deadlines and mailboxes of the centre in `lookup_sla` and `lookup_contact`, and the 1 and 4 minutes of the business case timed in the pilot.
+5. The drift alert and the share of 👎 watched every week. If either alert fires, every report goes back to a person.
 
 ## How to run it
 
-Keys: `GEMINI_API_KEY` (required) and `GEMINI_MODEL` (optional). There is no download step and no local model: `uv sync`, then `uv run python app.py`. `main.py evaluate` makes about 9 Gemini calls per case and caches the answers in `logs/eval_cache.json`. [TODO: measure how long the first evaluation run takes and write it here.]
+Keys: `GEMINI_API_KEY` (required) and `GEMINI_MODEL` (optional). There is no download step and no local model: `uv sync`, then `uv run python app.py`. `main.py evaluate` makes about 9 Gemini calls per case and caches the answers in `logs/eval_cache.json`. We did not time the first run exactly. With about 4 s per request plus a second run of B and two judge calls per case, expect roughly 10 minutes for the 40 cases (longer if the free tier's rate limit slows it down); later runs read the cache and take seconds. `uv run python main.py drift-demo` runs the 18 normal cases and the 10 shifted photos, about 2 minutes. `uv run python check.py` checks everything, as the professor will.
+
+Free tier: both models used here (`gemini-3.5-flash-lite` and `gemini-3.8-flash`) are free of charge with a free AI Studio key, with no billing account. The euro costs in this report are what the same calls would cost at paid-tier prices.
 
 ## AI use
 
@@ -261,3 +284,5 @@ Claude (Anthropic) was used on 22 Nov 2026 to propose the provisional business c
 On 25 Nov 2026 Claude searched Wikimedia Commons for candidate photos for cases c15 to c28, resized them, removed their metadata and helped word the `notes` and `baseline` texts. Máximo chose the 14 photos and decided the description, expected category and baseline of each one.
 
 On 25 Nov 2026 Claude Code ran the evaluation, updated the default model, prices and judge in `pipeline.py` and `evaluate.py`, proposed the human labels that Gonzalo Angulo confirmed (see End to end), and drafted the Evaluation and Failures sections from the runs' numbers.
+
+On 26 Nov 2026 Claude Code merged the workstream branches, checked the photos c01 to c14 for people, reproduced the drift demo offline, checked the free-tier prices, added `not_an_issue` to the review rule and drafted the Business case, Decision and How to run sections. Eduardo chose the model and the review rule and reviewed the text.
