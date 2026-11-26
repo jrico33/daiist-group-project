@@ -73,7 +73,22 @@ drafted work order  +  review rule (a person sees uncertain or serious cases)
 | c27 | [Gebrochener Spiegel, Austria](https://commons.wikimedia.org/wiki/File:Gebrochener_Spiegel,_Austria.jpg) | Naturpuur | CC BY 4.0 |
 | c28 | [Ceiling sheetrock damaged by water so paint was peeling](https://commons.wikimedia.org/wiki/File:Ceiling_sheetrock_damaged_by_water_so_paint_was_peeling.jpg) | Tomwsulcer | CC0 |
 
-**Personal data.** No person appears in c15 to c28, and they show no names, documents or readable number plates; one shows a house number on a shutter (c18) and some show brand names (a vending machine, a food wrapper). No person is in the foreground of c29 to c40. One photo (c29) shows a laptop screen whose wallpaper has two small, blurred figures, not identifiable; the team decided to keep it. Some photos show product brand names (an oven, a remote control, a racket, shoes) and no names, number plates or documents. The other members' photos and the reference and shifted sets are described by their authors [TODO].
+**Shifted set for the drift demo** (`eval/inputs/s01.jpg` to `s10.jpg`, listed in `eval/shifted.csv`). These come from Wikimedia Commons, chosen on 25 November 2026 under public domain, CC0 or CC BY licences (no ShareAlike or NonCommercial). They are shifted on purpose: they are not phone photos taken by staff, but web and camera photos taken in conditions the product was not built for (a dark tunnel, night scenes, black and white, a thermal camera image, an industrial plant, a beach). We only resized them to at most 1,024 pixels wide (28 to 253 KB each, about 1.7 MB in total) and removed all metadata; we did not edit their content. No person appears in them.
+
+| File | Source (Wikimedia Commons) | Author | Licence |
+|---|---|---|---|
+| s01 | [75014 Petite Ceinture Tunnel de Montsouris vers la tranchée d'Arcueil](https://commons.wikimedia.org/wiki/File:75014_Petite_Ceinture_Tunnel_de_Montsouris_vers_la_tranch%C3%A9e_d%27Arcueil.jpg) | Jérôme Bon | CC BY 2.0 |
+| s02 | [Broken Glass (18434524128)](https://commons.wikimedia.org/wiki/File:Broken_Glass_(18434524128).jpg) | Rodrigo Paredes | CC BY 2.0 |
+| s03 | [Elektroschuetz](https://commons.wikimedia.org/wiki/File:Elektroschuetz.jpg) | Sönke Krüll | CC BY 3.0 |
+| s04 | [20201021 Sinter plant Völklingen Ironworks 07](https://commons.wikimedia.org/wiki/File:20201021_Sinter_plant_V%C3%B6lklingen_Ironworks_07.jpg) | Flocci Nivis | CC BY 4.0 |
+| s05 | [After the Rain - Flickr - judithjackson957](https://commons.wikimedia.org/wiki/File:After_the_Rain_-_Flickr_-_judithjackson957.jpg) | Judith Jackson | CC BY 2.0 |
+| s06 | [Cracks (1489533799)](https://commons.wikimedia.org/wiki/File:Cracks_(1489533799).jpg) | Raphael Schön | CC BY 2.0 |
+| s07 | [Destroyed Lamp](https://commons.wikimedia.org/wiki/File:Destroyed_Lamp.jpg) | Jaroslav A. Polák | CC BY 4.0 |
+| s08 | [Blue elixir (3156956367)](https://commons.wikimedia.org/wiki/File:Blue_elixir_(3156956367).jpg) | torbakhopper | CC BY 2.0 |
+| s09 | [Estintore Dick fine '800](https://commons.wikimedia.org/wiki/File:Estintore_Dick_fine_%27800.jpg) | Museo storico pompieri | CC0 |
+| s10 | [California - Arcata Beach early morning, Arcata (NARA 542978)](https://commons.wikimedia.org/wiki/File:CALIFORNIA-ARCATA_BEACH_EARLY_MORNING,_ARCATA_-_NARA_-_542978.jpg) | Tomas Sennett | Public domain |
+
+**Personal data.** No person appears in c15 to c28, and they show no names, documents or readable number plates; one shows a house number on a shutter (c18) and some show brand names (a vending machine, a food wrapper). No person is in the foreground of c29 to c40. One photo (c29) shows a laptop screen whose wallpaper has two small, blurred figures, not identifiable; the team decided to keep it. Some photos show product brand names (an oven, a remote control, a racket, shoes) and no names, number plates or documents. The reference photos r01 to r30 show no people, faces, screens or names; their only text is safety signs (exits, fire equipment, toilets), and the phone's location was not stored in them. The shifted photos s01 to s10 show no people. The other members' photos are described by their authors [TODO].
 
 ## Evaluation
 
@@ -91,7 +106,40 @@ drafted work order  +  review rule (a person sees uncertain or serious cases)
 
 ## Operations
 
-*What you log. The quality signal and the drift check you monitor, the reference set, and the alert threshold with its justification. The drift demo: what you shifted, and the result with the alert firing (screenshot or numbers). The rate of false alarms on normal inputs.*
+**What we log.** Every request writes one record (`logbook.py`): a summary of the input (`photo <name>: <category>, severity <n>`, never the photo itself), the output of component A (category, severity, confidence, description) and of component B (the work order), the model and prompt versions, tokens, cost in euros, latency, whether the case went to review, the user's 👍/👎, and six numeric features of the photo: `brightness` and `contrast` (mean and standard deviation of the grey levels, 0 to 255), `megapixels`, `aspect_ratio`, and the model's `confidence` and `severity`. Online, the records go to Render's Postgres database.
+
+**Quality signals.** The Monitoring tab plots, per hour, the share of requests sent to review, the share of 👎 among rated requests and the mean confidence of component A. A second alert fires when more than 40% of the last rated requests (at least 20) are 👎.
+
+**Reference set.** 30 photos taken by Gonzalo Mir with a phone on the evening of 25 November 2026 in a university study area (corridors, toilets, study rooms, fire safety equipment, signs, sockets, furniture), with no people, faces, screens or names in them. They were resized to 1,536 × 2,048 pixels, the format of the phone photos in c01 to c14, and their metadata was removed (`eval/inputs/r01.jpg` to `r30.jpg`, listed in `eval/reference.csv`). `uv run python main.py reference` turned them into `monitoring/reference_features.csv`.
+
+**What the drift check watches, and what it leaves out.** The alert compares the PSI of `brightness` and `contrast` in the last 100 requests against the reference set (`monitor.DRIFT_FEATURES`). These two describe the light and content of the photo, which is what changes the vision model's answers. We log the other four features but do not alert on them:
+
+- `megapixels` and `aspect_ratio` describe the file format, not the scene. Our own `normal` cases range from 0.26 to 3.1 megapixels with no change in quality, so against a reference of same-size phone photos their PSI is 2.9 to 18 on normal inputs. Alerting on them would be a false alarm on almost every check.
+- `confidence` and `severity` come from the model, and the reference photos show everyday scenes rather than incidents (mean severity 1.1, against 1.8 for the `normal` cases). Their PSI on normal inputs is 3.0 and 3.5, so they measure how many reports are real incidents, not whether the photos have changed. Confidence is still plotted as a quality signal.
+
+**The alert rule and its threshold.** A feature alerts when its PSI over the last 100 requests is above `PSI_ALERT = 1.25` and above twice the PSI expected by chance for those sample sizes (`NOISE_MULTIPLE = 2`). The drift alert stays silent until there are 100 requests (`DRIFT_MIN_WINDOW`). We chose these values from a simulation with the features of the drift demo: 1,000 windows of 100 requests, drawn with replacement from the 18 `normal` cases, with a growing share of shifted photos.
+
+| `PSI_ALERT` | False alarms (0% shifted) | 60% shifted | 70% shifted | 80% shifted | 100% shifted |
+|---|---|---|---|---|---|
+| 0.25 (template default) | 100% | 100% | 100% | 100% | 100% |
+| 1.0 | 9.5% | 46% | 95% | 100% | 100% |
+| **1.25 (chosen)** | **1.4%** | 12% | 55% | **99%** | 100% |
+| 1.5 | 1.2% | 1% | 14% | 77% | 100% |
+
+The textbook threshold of 0.25 fires on every window of normal traffic. Normal photos from other places already sit at a PSI of about 0.5 to 0.65 against a reference taken in one building, because the light and the walls are different. With 1.25, about 1 check in 70 is a false alarm, and the alert almost always fires once 80% of the recent photos are shifted. 1.5 would cut false alarms only slightly (1.2%) but miss a quarter of those shifts. With smaller windows the PSI is mostly noise: with 20 requests, normal traffic alone raised an alert in about 75% of the simulated windows, whatever the threshold. That is why the drift alert waits for 100 requests.
+
+**What this alert can and cannot catch.** It is built for a large, sustained change in the photos: a new phone or app that changes the exposure, staff sending photos at night or from a dark plant room, or photos downloaded from the web instead of taken on site. It does not catch a small share of odd photos mixed into normal traffic. Those are better caught one by one, by the review rule and the 👎 signal.
+
+**Drift demo.** `eval/shifted.csv` lists 10 photos that we shifted on purpose by changing their source and conditions: web and camera photos from Wikimedia Commons of a dark tunnel, night scenes, black and white shots, a thermal camera image and an industrial plant (sources in the Data section). Result of `uv run python main.py drift-demo`, with `gemini-3.5-flash-lite`:
+
+| Inputs | n | PSI brightness | PSI contrast | Threshold | Alert |
+|---|---|---|---|---|---|
+| `normal` cases (c01 to c18) | 18 | 0.524 | 0.653 | 1.25 | quiet |
+| shifted photos | 10 | 5.680 | 3.354 | 1.25 | **fires** |
+
+**False alarms on normal inputs.** The drift demo's normal cases stay quiet. In the simulation above, about 1.4% of windows of 100 normal requests raise a false drift alarm.
+
+**Limitations.** The reference set comes from a single building, photographed in a few minutes on one evening. The simulation resamples only 18 normal cases, so the rates above are rough. Once the app has a few weeks of real traffic, the reference should be rebuilt from logged requests that a person checked, and the threshold re-estimated the same way.
 
 ## Failures
 
