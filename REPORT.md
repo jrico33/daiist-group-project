@@ -5,8 +5,6 @@
 - **App URL** (on Render): https://retail-incident-triage.onrender.com
 - **Final commit** (tag `final`): the commit tagged `final` on `main`, https://github.com/jrico33/daiist-group-project/tree/final
 
-*At most about 3,000 words, tables excluded. Members and who did what go in CONTRIBUTIONS.md.*
-
 ## Business case
 
 **Users.** The operations team of a shopping centre (property or centre manager and technical-services coordinator). Tenants, security staff and visitors send photos of problems: leaks, broken glass, electrical faults, waste, graffiti, fire-safety issues.
@@ -47,8 +45,6 @@ drafted work order  +  review rule (a person sees uncertain or serious cases)
 **Reused from assignments 1-3.** None. All the code was written for this project, starting from the course template.
 
 ## Data
-
-*Where each component's data comes from, with links, licences and sizes. Confirm that there is no personal data in your inputs or logs.*
 
 No component was trained: both are Gemini models called through the API, so the only data are the photos below, used to evaluate the product and to monitor it. In total there are 80 photos: 40 evaluation cases, 30 reference photos and 10 shifted photos.
 
@@ -278,8 +274,6 @@ Free-tier rate limit: a free key allows 15 requests per minute for `gemini-3.5-f
 Free tier: both models used here (`gemini-3.5-flash-lite` and `gemini-3.8-flash`) are free of charge with a free AI Studio key, with no billing account. The euro costs in this report are what the same calls would cost at paid-tier prices.
 
 ## AI use
-
-*What you used and how, or "none".*
 
 Claude (Anthropic) was used on 22 Nov 2026 to propose the provisional business case and to write the first version of `pipeline.py`, the app screen and the configuration. The team reviews and owns all of it.
 
