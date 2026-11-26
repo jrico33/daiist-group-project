@@ -1,1 +1,41 @@
 id,label,comment
+c01,fail,Never says what to clean up although A described a bag of rubbish
+c02,pass,Right team and deadline; specific instructions
+c03,pass,Clear and urgent; 8 h deadline is right
+c04,pass,Matches A; routing details correct
+c05,pass,Consistent with A's not_an_issue (A missed the reported damage)
+c06,pass,Consistent with A's not_an_issue (A missed the blocked sink)
+c07,pass,Borderline: follows A but titled a leak while the text says spill
+c08,pass,Clear and matches A
+c09,pass,Specific and complete
+c10,pass,Specific and consistent with A
+c11,pass,"Borderline: generic title and ""immediately"" vs 48 h, but problem, team and deadline are clear"
+c12,pass,Consistent with A's not_an_issue
+c13,fail,"Title says broken glass but text describes a fallen flower; ""appropriate action"" is not actionable"
+c14,pass,Matches A; clear repair instructions
+c15,pass,Consistent with A's not_an_issue (A missed the fire-safety problem)
+c16,pass,Specific and complete; deadline correct
+c17,pass,Clear hazard; 8 h deadline is right
+c18,pass,Specific and complete
+c19,pass,Consistent with A's not_an_issue
+c20,pass,"Borderline: clear; ""unauthorized"" is a small inference"
+c21,pass,"Short, specific and complete"
+c22,pass,Borderline: follows A's water_leak but treats a wet-floor sign as a leak to repair
+c23,pass,Matches A's result
+c24,pass,Clear and consistent with A
+c25,pass,Consistent with A; the burst pipe was never passed to B
+c26,pass,Clear hazard; correct routing
+c27,pass,"Borderline: generic title and ""resolve the issue"", but the cracked mirror is identified"
+c28,pass,"Borderline: A says potential leak, B treats it as a leak but asks to inspect first"
+c29,pass,Consistent with A's not_an_issue
+c30,fail,"Title says broken glass but the problem is a carpet thread; ""appropriate action"" is not actionable"
+c31,pass,Consistent with A's not_an_issue
+c32,pass,States what is unknown and asks for an in-person check
+c33,pass,Specific and consistent with A
+c34,pass,Specific and consistent with A
+c35,pass,Correct: no work order
+c36,pass,Correct: no work order
+c37,pass,"Borderline: follows A, but ""discarded"" is added (A only says left)"
+c38,pass,"Borderline: follows A, but ""hazard"" and ""immediately"" overstate it"
+c39,pass,Correct: no work order
+c40,pass,"Borderline: vague action, but the problem is identified"

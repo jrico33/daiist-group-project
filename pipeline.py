@@ -26,7 +26,7 @@ from PIL import Image, ImageStat
 
 ROOT = Path(__file__).resolve().parent
 
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")  # TODO: confirm the current model name
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")  # 2.5 models: closed to new keys
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
 VERSIONS = {
@@ -34,9 +34,16 @@ VERSIONS = {
     "component_b": f"{MODEL}-agent-prompt-v1",
 }
 
-# TODO: replace with the real prices of the model you use (EUR per million tokens).
-PRICE_IN_EUR_PER_M = 0.30
-PRICE_OUT_EUR_PER_M = 2.30
+# Paid-tier standard prices per million tokens (output includes thinking tokens), in USD from
+# https://ai.google.dev/gemini-api/docs/pricing, converted at the ECB reference rate of
+# 25 Nov 2026: 1 EUR = 1.0935 USD (https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml).
+USD_PER_EUR = 1.0935
+PRICES_EUR_PER_M = {  # model: (input, output)
+    "gemini-3.5-flash-lite": (0.30 / USD_PER_EUR, 2.50 / USD_PER_EUR),
+    "gemini-3.8-flash": (0.75 / USD_PER_EUR, 3.75 / USD_PER_EUR),  # price valid through 31 Dec 2026
+}
+# A model that is not in the table is priced as the most expensive one, so its cost is not understated.
+FALLBACK_PRICE = max(PRICES_EUR_PER_M.values())
 
 # Review rule (to justify in REPORT.md with the evaluation numbers).
 REVIEW_BELOW_CONFIDENCE = 0.7
@@ -73,12 +80,12 @@ class MissingKey(RuntimeError):
 
 # --- Gemini REST helper ----------------------------------------------------------
 
-def _gemini(body: dict) -> dict:
+def _gemini(body: dict, model: str = MODEL) -> dict:
     key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not key:
         raise MissingKey("GEMINI_API_KEY is not set (see .env.example).")
     request = urllib.request.Request(
-        API_URL.format(model=MODEL),
+        API_URL.format(model=model),
         data=json.dumps(body).encode("utf-8"),
         headers={"Content-Type": "application/json", "x-goog-api-key": key},
     )
@@ -101,8 +108,9 @@ def _usage(response: dict) -> tuple[int, int]:
     return prompt, output
 
 
-def _cost(prompt_tokens: int, output_tokens: int) -> float:
-    return (prompt_tokens * PRICE_IN_EUR_PER_M + output_tokens * PRICE_OUT_EUR_PER_M) / 1_000_000
+def _cost(prompt_tokens: int, output_tokens: int, model: str = MODEL) -> float:
+    price_in, price_out = PRICES_EUR_PER_M.get(model, FALLBACK_PRICE)
+    return (prompt_tokens * price_in + output_tokens * price_out) / 1_000_000
 
 
 # --- Input -------------------------------------------------------------------------

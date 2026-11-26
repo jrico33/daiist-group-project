@@ -148,6 +148,11 @@ def failure_cause(case: dict, result: dict, tool_ok: bool, reply_consistent: boo
 
 # --- LLM judge --------------------------------------------------------------------
 
+# Fixed, so that every model under test is graded by the same judge.
+JUDGE_MODEL = "gemini-3.8-flash"
+# eval/human_labels.csv labels the work orders written by this model; they say nothing about another model's.
+LABELLED_MODEL = "gemini-3.5-flash-lite"
+
 JUDGE_SCHEMA = {
     "type": "OBJECT",
     "properties": {
@@ -170,7 +175,7 @@ Work order to grade: {reply}"""
 
 
 def judge(case_id: str, a: dict, reply: str, tool_calls: list[dict]) -> dict:
-    key = f"judge|{case_id}|{hashlib.sha256(reply.encode()).hexdigest()[:16]}|{json.dumps(a, sort_keys=True)}"
+    key = f"judge|{JUDGE_MODEL}|{case_id}|{hashlib.sha256(reply.encode()).hexdigest()[:16]}|{json.dumps(a, sort_keys=True)}"
 
     def compute():
         visible = {k: a[k] for k in ("category", "severity", "confidence", "description")}
@@ -178,10 +183,10 @@ def judge(case_id: str, a: dict, reply: str, tool_calls: list[dict]) -> dict:
         response = pipeline._gemini({
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"temperature": 0, "responseMimeType": "application/json", "responseSchema": JUDGE_SCHEMA},
-        })
+        }, model=JUDGE_MODEL)
         out = json.loads(response["candidates"][0]["content"]["parts"][0]["text"])
         prompt_tokens, output_tokens = pipeline._usage(response)
-        out["cost_eur"] = pipeline._cost(prompt_tokens, output_tokens)
+        out["cost_eur"] = pipeline._cost(prompt_tokens, output_tokens, model=JUDGE_MODEL)
         return out
 
     return cached(key, compute)
@@ -250,6 +255,7 @@ def main() -> None:
                 "cause": "" if correct else failure_cause(case, result, tool_ok, reply_consistent),
                 "tools_ok": tool_ok, "reply_ok": reply_consistent, "judge": verdict["verdict"],
                 "b_alone_tools_ok": alone_tools, "b_alone_reply_ok": alone_reply, "b_alone_judge": alone_verdict["verdict"],
+                "tokens_a": a["tokens"], "tokens_b": b["tokens"],
                 "latency_s": run["latency_s"], "tokens": result["tokens"], "cost_eur": result["cost_eur"],
                 "cost_a_eur": a.get("cost_eur", 0.0), "cost_b_eur": b.get("cost_eur", 0.0),
                 "baseline_correct": case["baseline"].strip().lower().startswith("correct")
@@ -268,6 +274,7 @@ def main() -> None:
         print("No case ran successfully: check GEMINI_API_KEY and the errors in the `cause` column.")
         return
 
+    print(f"model under test: {pipeline.MODEL}   judge: {JUDGE_MODEL}")
     heading("1. Component A (vision) alone")
     truth = [parse_expected(e)[0] for e in done["expected"]]
     predicted = done["category"].tolist()
@@ -306,17 +313,37 @@ def main() -> None:
     print(f"at {REPORTS_PER_DAY} reports a day, about {done['review'].mean() * REPORTS_PER_DAY:.0f} go to a person each day (all cases mixed)")
     print(f"cost per request: €{done['cost_eur'].mean():.5f} (A €{done['cost_a_eur'].mean():.5f}, B €{done['cost_b_eur'].mean():.5f}), "
           f"{done['tokens'].mean():.0f} tokens, median {done['latency_s'].median():.1f} s")
+    print(f"tokens per request: A {done['tokens_a'].mean():.0f}, B {done['tokens_b'].mean():.0f}")
+    print(f"latency: median {done['latency_s'].median():.1f} s, worst case {done['latency_s'].max():.1f} s ({done.loc[done['latency_s'].idxmax(), 'id']}); "
+          f"cost: median €{done['cost_eur'].median():.5f}, worst case €{done['cost_eur'].max():.5f}; "
+          f"tokens: median {done['tokens'].median():.0f}, worst case {done['tokens'].max():.0f}")
+    print(f"end-to-end judge pass {(done['judge'] == 'pass').mean():.1%}   (judge: {JUDGE_MODEL})")
+    print(f"sent to a person: {done['review'].mean():.1%} of {len(done)}")
+    serious = done[[c == "fire_safety" or (s or 0) >= 4 for c, s in map(parse_expected, done["expected"])]]
+    print(f"serious cases (expected fire_safety or severity 4-5): {len(serious)}, not sent to a person: "
+          f"{int((~serious['review'].astype(bool)).sum())}, wrong category: {sum(parse_expected(e)[0] != c for e, c in zip(serious['expected'], serious['category']))}")
+    print("review rule variants (wrong category = A's category differs from the expected one, all kinds):")
+    wrong = done["category"] != done["expected"].map(lambda e: parse_expected(e)[0])
+    variants = {f"confidence below {t}": done["review"].astype(bool) | (done["confidence"] < t) for t in (0.7, 0.8, 0.9, 0.95, 0.99)}
+    variants["current rule + every not_an_issue"] = done["review"].astype(bool) | (done["category"] == "not_an_issue")
+    for name, sent in variants.items():
+        is_serious = done["id"].isin(serious["id"])
+        print(f"  {name}: sent {sent.mean():.1%} ({sent.mean() * REPORTS_PER_DAY:.0f}/day), wrong category caught {int((sent & wrong).sum())} of {int(wrong.sum())}, "
+              f"review cases sent {int((sent & (done['kind'] == 'review')).sum())} of {len(need)}, serious caught {int((sent & is_serious).sum())} of {len(serious)}")
     print(f"per month at {REPORTS_PER_DAY}/day: €{done['cost_eur'].mean() * REPORTS_PER_DAY * DAYS_PER_MONTH:.2f}")
     print(f"(judge calls for this evaluation cost €{judge_cost:.4f}, not part of the product's cost)")
 
     heading("5. LLM judge against your labels")
     verdicts = dict(zip(done["id"], done["judge"]))
-    stats = judge_agreement(verdicts)
+    stats = judge_agreement(verdicts) if pipeline.MODEL == LABELLED_MODEL else None
+    if pipeline.MODEL != LABELLED_MODEL:
+        print(f"not computed: the labels are for {LABELLED_MODEL}'s work orders")
+        return
     if stats is None:
         print("no overlap with eval/human_labels.csv: label at least 20 cases (id,label,comment; label pass/fail)")
     else:
         n, observed, kappa = stats
-        print(f"{n} labelled cases: agreement {observed:.0%}, Cohen's kappa {kappa:.2f}" + ("" if n >= 20 else "  (fewer than the 20 required)"))
+        print(f"{n} labelled cases: agreement {observed:.0%}, Cohen's kappa {kappa:.2f}; {sum(1 for i, v in verdicts.items() if v == 'fail')} judge fails" + ("" if n >= 20 else "  (fewer than the 20 required)"))
 
 
 if __name__ == "__main__":

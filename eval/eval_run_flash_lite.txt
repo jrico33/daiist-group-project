@@ -1,0 +1,50 @@
+Wrote eval/results.csv (40 cases).
+model under test: gemini-3.5-flash-lite   judge: gemini-3.8-flash
+
+=== 1. Component A (vision) alone ===========================================
+cases 40   accuracy 62.5%   macro-F1 0.581
+severity within +-1: 100.0% of 2 cases with an expected severity
+(these cases are also the end-to-end set: say so in REPORT.md, or hold some out)
+
+=== 2. Component B (agent) alone, given the human-correct output of A =======
+tools used correctly 95.0%   reply consistent with tools 95.0%   judge pass 92.5%
+
+=== 3. End to end against the baseline ======================================
+              cases  correct  sent_to_review  median_latency_s  mean_cost_eur
+kind                                                                         
+hard             10    0.600           0.000             4.242          0.001
+normal           18    0.667           0.111             3.990          0.001
+out_of_scope      6    0.500           0.000             3.762          0.001
+review            6    0.167           0.167             4.344          0.001
+
+product correct 55.0% of 40
+baseline correct 90.0% of 40 cases with a baseline verdict
+
+Failures by cause:
+cause
+A: wrong category                                 10
+review rule: case was not sent to a person         5
+A: out-of-scope photo taken as a real incident     3
+
+=== 4. Review rule, cost and latency ========================================
+review cases sent to a person: 17% of 6
+normal cases sent to a person: 11% of 18
+at 40 reports a day, about 3 go to a person each day (all cases mixed)
+cost per request: €0.00088 (A €0.00046, B €0.00042), 2120 tokens, median 4.2 s
+tokens per request: A 1272, B 848
+latency: median 4.2 s, worst case 5.1 s (c21); cost: median €0.00098, worst case €0.00104; tokens: median 2306, worst case 2359
+end-to-end judge pass 100.0%   (judge: gemini-3.8-flash)
+sent to a person: 7.5% of 40
+serious cases (expected fire_safety or severity 4-5): 2, not sent to a person: 2, wrong category: 2
+review rule variants (wrong category = A's category differs from the expected one, all kinds):
+  confidence below 0.7: sent 7.5% (3/day), wrong category caught 0 of 15, review cases sent 1 of 6, serious caught 0 of 2
+  confidence below 0.8: sent 7.5% (3/day), wrong category caught 0 of 15, review cases sent 1 of 6, serious caught 0 of 2
+  confidence below 0.9: sent 17.5% (7/day), wrong category caught 3 of 15, review cases sent 3 of 6, serious caught 0 of 2
+  confidence below 0.95: sent 22.5% (9/day), wrong category caught 4 of 15, review cases sent 3 of 6, serious caught 0 of 2
+  confidence below 0.99: sent 82.5% (33/day), wrong category caught 12 of 15, review cases sent 5 of 6, serious caught 1 of 2
+  current rule + every not_an_issue: sent 32.5% (13/day), wrong category caught 7 of 15, review cases sent 3 of 6, serious caught 2 of 2
+per month at 40/day: €1.06
+(judge calls for this evaluation cost €0.1237, not part of the product's cost)
+
+=== 5. LLM judge against your labels ========================================
+40 labelled cases: agreement 92%, Cohen's kappa 0.00; 0 judge fails
